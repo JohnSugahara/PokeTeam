@@ -53,6 +53,11 @@ jobs:
           node-version: 22.x
           cache: 'npm'
           cache-dependency-path: 'backend/package-lock.json'
+      - name: Instalando dependencias
+        run: |
+             cd backend
+             npm ci
+      
       - name: Notificacao por email
         run: node backend/ci/notification.js
         env:

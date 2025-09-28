@@ -15,7 +15,7 @@ const getRandomTeam = async(req, res) => {
     try{
         let team = [];
         for (let i=0; i<6; i++){
-            const idAleatorio = parseInt(Math.random() * 1302)+ 1;
+            const idAleatorio = parseInt(Math.random() * 898) + 1;
             const response = await axios.get(`https://pokeapi.co/api/v2/pokemon/${idAleatorio}/`);
             team.push(response.data);
         }

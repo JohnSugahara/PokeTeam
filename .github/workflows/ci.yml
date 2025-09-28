@@ -45,6 +45,7 @@ jobs:
     needs: build-backend  #enquanto não tem os testes
 
     runs-on: ubuntu-latest
+    environment: CI/CD
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node
@@ -61,6 +62,6 @@ jobs:
       - name: Notificacao por email
         run: node backend/ci/notification.js
         env:
-          EMAIL_USER: ${{secrets.EMAIL_USER}}
-          EMAIL_PASS: ${{secrets.EMAIL_PASS}}
-          EMAIL_TO: ${{secrets.EMAIL_TO}}
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}

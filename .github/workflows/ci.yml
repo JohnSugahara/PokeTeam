@@ -65,7 +65,9 @@ jobs:
   
   notificacao:
 
-    needs: build-backend, build-frontend  #enquanto não tem os testes
+    needs: 
+      - build-backend
+      - build-frontend  #enquanto não tem os testes
 
     runs-on: ubuntu-latest
     environment: CI/CD

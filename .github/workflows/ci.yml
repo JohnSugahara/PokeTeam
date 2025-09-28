@@ -39,3 +39,29 @@ jobs:
       with: 
         name: backend-package-${{ matrix.node-version }}
         path: backend.zip
+  
+  notificacao:
+
+    needs: build-backend  #enquanto não tem os testes
+
+    runs-on: ubuntu-latest
+    environment: CI/CD
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+          cache-dependency-path: 'backend/package-lock.json'
+      - name: Instalando dependencias
+        run: |
+             cd backend
+             npm ci
+      
+      - name: Notificacao por email
+        run: node backend/ci/notification.js
+        env:
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}

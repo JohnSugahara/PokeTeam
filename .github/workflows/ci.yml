@@ -34,7 +34,7 @@ jobs:
     - name: Upload de artefato
       uses: actions/upload-artifact@v4
       with: 
-        name: backend-package-${{ matrix.node-version }}
+        name: backend-package
         path: backend.zip
 
   build-frontend:
@@ -60,13 +60,40 @@ jobs:
     - name: Upload de artefato
       uses: actions/upload-artifact@v4
       with: 
-        name: frontend-package-${{ matrix.node-version }}
+        name: frontend-package
         path: frontend.zip
   
+  test-backend:
+    needs: build-backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4 
+        with:
+          node-version: 22.x
+          cache: 'npm'
+          cache-dependency-path: 'backend/package-lock.json'
+      - name: Instalando dependencias
+        run: |
+             cd backend
+             npm ci
+      - name: Rodando os testes do backend
+        run: |
+             cd backend
+             npm test
+
+      - name: Upload do relatorio de testes do backend
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-tests-backend
+          path: backend/reports/test-report.html
+
+
   notificacao:
 
     needs: 
-      - build-backend
+      - test-backend
       - build-frontend  #enquanto não tem os testes
 
     runs-on: ubuntu-latest

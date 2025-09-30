@@ -1,0 +1,145 @@
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+
+name: ci
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+  pull_request:
+    branches: [ "main", "dev" ]
+
+jobs:
+  build-backend:
+
+    runs-on: ubuntu-latest
+
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22.x
+        cache: 'npm'
+        cache-dependency-path: 'backend/package-lock.json'
+    - name: Instalando dependências
+      run: |
+           cd backend
+           npm ci
+        
+    - name: Gerando artefato
+      run: zip -r backend.zip backend -x "backend/node_modules/*" -x "backend/.gitignore"
+
+    - name: Upload de artefato
+      uses: actions/upload-artifact@v4
+      with: 
+        name: backend-package
+        path: backend.zip
+
+  build-frontend:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22.x
+        cache: 'npm'
+        cache-dependency-path: 'frontend/package-lock.json'
+    - name: Instalando dependências
+      run: |
+           cd frontend
+           npm ci
+        
+    - name: Gerando artefato
+      run: zip -r frontend.zip frontend -x "frontend/node_modules/*" -x "frontend/.gitignore"
+
+    - name: Upload de artefato
+      uses: actions/upload-artifact@v4
+      with: 
+        name: frontend-package
+        path: frontend.zip
+  
+  test-backend:
+    needs: build-backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4 
+        with:
+          node-version: 22.x
+          cache: 'npm'
+          cache-dependency-path: 'backend/package-lock.json'
+      - name: Instalando dependencias
+        run: |
+             cd backend
+             npm ci
+      - name: Rodando os testes do backend
+        run: |
+             cd backend
+             npm test
+
+      - name: Upload do relatorio de testes do backend
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-tests-backend
+          path: backend/reports/test-report.html
+
+  test-frontend:
+    needs: build-frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
+      - name: Instalando dependencias
+        run: |
+             cd frontend
+             npm ci
+      - name: Rodando os testes do frontend
+        run: |
+             cd frontend
+             npm test
+
+      - name: Upload do relatorio de testes do frontend
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-tests-frontend
+          path: frontend/reports/test-report.html
+
+
+  notificacao:
+
+    needs: 
+      - test-backend
+      - test-frontend 
+
+    runs-on: ubuntu-latest
+    environment: CI/CD
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+          cache-dependency-path: 'backend/package-lock.json'
+      - name: Instalando dependencias
+        run: |
+             cd backend
+             npm ci
+      
+      - name: Notificacao por email
+        run: node backend/ci/notification.js
+        env:
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}

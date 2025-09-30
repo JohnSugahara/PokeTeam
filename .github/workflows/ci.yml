@@ -89,12 +89,38 @@ jobs:
           name: relatorio-tests-backend
           path: backend/reports/test-report.html
 
+  test-frontend:
+    needs: build-frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
+      - name: Instalando dependencias
+        run: |
+             cd frontend
+             npm ci
+      - name: Rodando os testes do frontend
+        run: |
+             cd frontend
+             npm test
+
+      - name: Upload do relatorio de testes do frontend
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-tests-frontend
+          path: frontend/reports/test-report.html
+
 
   notificacao:
 
     needs: 
       - test-backend
-      - build-frontend  #enquanto não tem os testes
+      - test-frontend 
 
     runs-on: ubuntu-latest
     environment: CI/CD
